@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Đăng ký tham gia</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 0;
-      background: #f4f7f8;
+      background: linear-gradient(to right, #e0f7fa, #fff);
     }
 
     header {
-      background-color: #2c3e50;
+      background: linear-gradient(to right, #2c3e50, #4ca1af);
       color: white;
       padding: 1rem;
       text-align: center;
@@ -23,24 +23,26 @@
       max-width: 700px;
       margin: 2rem auto;
       padding: 2rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #ffffffee;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       position: relative;
     }
 
     label {
       display: block;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       font-weight: bold;
+      color: #34495e;
     }
 
     input[type="text"] {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
-      border-radius: 4px;
+      border-radius: 6px;
       border: 1px solid #ccc;
+      font-size: 1rem;
     }
 
     .suggestions-list {
@@ -52,7 +54,7 @@
       max-height: 150px;
       overflow-y: auto;
       position: absolute;
-      width: 100%;
+      width: calc(100% - 4rem);
       background-color: white;
       z-index: 1000;
     }
@@ -67,25 +69,36 @@
     }
 
     .checkbox-group {
-      margin-top: 1rem;
+      margin-top: 2rem;
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-weight: normal;
     }
 
     .checkbox-group input {
-      margin-right: 10px;
+      margin-right: 8px;
     }
 
     button {
       margin-top: 2rem;
-      padding: 10px 20px;
-      background-color: #3498db;
+      padding: 12px 24px;
+      background: linear-gradient(to right, #3498db, #2ecc71);
       color: white;
       border: none;
-      border-radius: 5px;
+      font-size: 1rem;
+      border-radius: 6px;
       cursor: pointer;
+      transition: background 0.3s;
     }
 
     button:hover {
-      background-color: #2980b9;
+      background: linear-gradient(to right, #2ecc71, #3498db);
     }
 
     #participants {
@@ -93,8 +106,8 @@
       margin: 2rem auto;
       background: white;
       padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
 
     table {
@@ -110,10 +123,20 @@
     }
 
     th {
-      background-color: #ecf0f1;
+      background-color: #3498db;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
     }
 
     @media (max-width: 600px) {
+      .container, #participants {
+        margin: 1rem;
+        padding: 1rem;
+      }
+
       table, thead, tbody, th, td, tr {
         display: block;
       }
@@ -160,9 +183,10 @@
   <input type="text" id="center" placeholder="Trung tâm sẽ gợi ý theo phòng">
   <ul id="center-suggestions" class="suggestions-list"></ul>
 
-  <!-- Tham gia -->
+  <!-- Tham gia / Không tham gia -->
   <div class="checkbox-group">
     <label><input type="checkbox" id="participate"> Tham gia</label>
+    <label><input type="checkbox" id="notParticipate"> Không tham gia</label>
   </div>
 
   <button onclick="submitForm()">Gửi</button>
@@ -179,14 +203,11 @@
         <th>Trung tâm</th>
       </tr>
     </thead>
-    <tbody id="list-body">
-      <!-- Sẽ được thêm bằng JS -->
-    </tbody>
+    <tbody id="list-body"></tbody>
   </table>
 </div>
 
 <script>
-  // Dữ liệu
   const nameList = ["Nguyễn Văn A", "Nguyễn Văn B", "Trần Thị C", "Lê Văn D", "Phạm Thị E"];
   const departmentList = ["Phòng Kỹ thuật", "Phòng Nhân sự", "Phòng Kế toán", "Phòng IT"];
   const centerMap = {
@@ -196,7 +217,6 @@
     "Phòng IT": ["Trung tâm Hạ tầng", "Trung tâm Phần mềm"]
   };
 
-  // Hàm tạo gợi ý
   function setupAutoSuggest(inputId, list, suggestionId, onSelectCallback) {
     const input = document.getElementById(inputId);
     const suggestionBox = document.getElementById(suggestionId);
@@ -219,7 +239,6 @@
       });
     });
 
-    // Ẩn khi click ngoài
     document.addEventListener("click", function (e) {
       if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
         suggestionBox.innerHTML = "";
@@ -227,23 +246,24 @@
     });
   }
 
-  // Khởi tạo 3 ô
   setupAutoSuggest("fullname", nameList, "name-suggestions");
   setupAutoSuggest("department", departmentList, "department-suggestions", updateCenterSuggestions);
 
   function updateCenterSuggestions(deptName) {
     const centers = centerMap[deptName] || [];
     setupAutoSuggest("center", centers, "center-suggestions");
-    // Gợi ý mặc định nếu có 1 trung tâm
-    if (centers.length === 1) {
-      document.getElementById("center").value = centers[0];
-    } else {
-      document.getElementById("center").value = "";
-      document.getElementById("center-suggestions").innerHTML = "";
-    }
+    document.getElementById("center").value = centers.length === 1 ? centers[0] : "";
   }
 
-  // Gửi form
+  // Đảm bảo chỉ chọn 1 trong 2 checkbox
+  document.getElementById("participate").addEventListener("change", function () {
+    if (this.checked) document.getElementById("notParticipate").checked = false;
+  });
+
+  document.getElementById("notParticipate").addEventListener("change", function () {
+    if (this.checked) document.getElementById("participate").checked = false;
+  });
+
   const formData = [];
 
   function submitForm() {
@@ -251,19 +271,23 @@
     const dept = document.getElementById("department").value.trim();
     const center = document.getElementById("center").value.trim();
     const participate = document.getElementById("participate").checked;
+    const notParticipate = document.getElementById("notParticipate").checked;
 
     if (!name || !dept || !center) {
       alert("Vui lòng nhập đầy đủ thông tin.");
       return;
     }
 
-    if (!participate) {
-      alert("Người này không tham gia.");
+    if (!participate && !notParticipate) {
+      alert("Vui lòng chọn Tham gia hoặc Không tham gia.");
       return;
     }
 
-    formData.push({ name, dept, center });
-    updateList();
+    if (participate) {
+      formData.push({ name, dept, center });
+      updateList();
+    }
+
     clearForm();
   }
 
@@ -285,6 +309,7 @@
     document.getElementById("department").value = "";
     document.getElementById("center").value = "";
     document.getElementById("participate").checked = false;
+    document.getElementById("notParticipate").checked = false;
     document.getElementById("name-suggestions").innerHTML = "";
     document.getElementById("department-suggestions").innerHTML = "";
     document.getElementById("center-suggestions").innerHTML = "";
