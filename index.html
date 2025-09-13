@@ -35,12 +35,35 @@
       font-weight: bold;
     }
 
-    input[type="text"], select {
+    input[type="text"] {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
       border-radius: 4px;
       border: 1px solid #ccc;
+    }
+
+    .suggestions-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ccc;
+      border-top: none;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      background-color: white;
+      z-index: 1000;
+    }
+
+    .suggestions-list li {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .suggestions-list li:hover {
+      background-color: #f0f0f0;
     }
 
     .checkbox-group {
@@ -91,11 +114,6 @@
     }
 
     @media (max-width: 600px) {
-      .container, #participants {
-        margin: 1rem;
-        padding: 1rem;
-      }
-
       table, thead, tbody, th, td, tr {
         display: block;
       }
@@ -118,29 +136,6 @@
       td:nth-of-type(2)::before { content: "Phòng"; }
       td:nth-of-type(3)::before { content: "Trung tâm"; }
     }
-
-    .suggestions-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      border: 1px solid #ccc;
-      border-top: none;
-      max-height: 150px;
-      overflow-y: auto;
-      position: absolute;
-      width: 100%;
-      background-color: white;
-      z-index: 1000;
-    }
-
-    .suggestions-list li {
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .suggestions-list li:hover {
-      background-color: #f0f0f0;
-    }
   </style>
 </head>
 <body>
@@ -152,31 +147,22 @@
 <div class="container">
   <!-- Họ và tên -->
   <label for="fullname">Họ và tên:</label>
-  <input type="text" id="fullname" name="fullname" placeholder="Nhập tên...">
+  <input type="text" id="fullname" placeholder="Nhập họ và tên">
   <ul id="name-suggestions" class="suggestions-list"></ul>
 
   <!-- Phòng -->
   <label for="department">Phòng:</label>
-  <input list="departments" id="department" name="department" placeholder="Nhập tên phòng">
-  <datalist id="departments">
-    <option value="Phòng Kỹ thuật">
-    <option value="Phòng Nhân sự">
-    <option value="Phòng Kế toán">
-    <option value="Phòng IT">
-  </datalist>
+  <input type="text" id="department" placeholder="Nhập tên phòng">
+  <ul id="department-suggestions" class="suggestions-list"></ul>
 
   <!-- Trung tâm -->
   <label for="center">Trung tâm:</label>
-  <input list="centers" id="center" name="center" placeholder="Chọn trung tâm tương ứng">
-  <datalist id="centers">
-    <!-- Sẽ được cập nhật động bằng JS -->
-  </datalist>
+  <input type="text" id="center" placeholder="Trung tâm sẽ gợi ý theo phòng">
+  <ul id="center-suggestions" class="suggestions-list"></ul>
 
   <!-- Tham gia -->
   <div class="checkbox-group">
-    <label>
-      <input type="checkbox" id="participate"> Tham gia
-    </label>
+    <label><input type="checkbox" id="participate"> Tham gia</label>
   </div>
 
   <button onclick="submitForm()">Gửi</button>
@@ -185,7 +171,7 @@
 <!-- Danh sách -->
 <div id="participants">
   <h2>Danh sách tham gia</h2>
-  <table id="list">
+  <table>
     <thead>
       <tr>
         <th>Họ và tên</th>
@@ -193,58 +179,16 @@
         <th>Trung tâm</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Danh sách sẽ thêm ở đây -->
+    <tbody id="list-body">
+      <!-- Sẽ được thêm bằng JS -->
     </tbody>
   </table>
 </div>
 
-<!-- JavaScript -->
 <script>
-  // Danh sách tên để gợi ý
-  const nameList = [
-    "Nguyễn Văn A", "Nguyễn Văn B", "Nguyễn Thị C",
-    "Trần Văn D", "Trần Thị E", "Lê Văn F",
-    "Lê Thị G", "Phạm Văn H", "Phạm Thị I",
-    "Vũ Văn J", "Đặng Thị K", "Hoàng Văn L"
-  ];
-
-  const nameInput = document.getElementById("fullname");
-  const suggestionBox = document.getElementById("name-suggestions");
-
-  // Gợi ý tên nâng cao
-  nameInput.addEventListener("input", function () {
-    const inputValue = this.value.toLowerCase();
-    suggestionBox.innerHTML = "";
-
-    if (inputValue === "") return;
-
-    const filteredNames = nameList.filter(name =>
-      name.toLowerCase().includes(inputValue)
-    );
-
-    filteredNames.forEach(name => {
-      const li = document.createElement("li");
-      li.textContent = name;
-      li.addEventListener("click", function () {
-        nameInput.value = name;
-        suggestionBox.innerHTML = "";
-      });
-      suggestionBox.appendChild(li);
-    });
-  });
-
-  // Ẩn gợi ý khi click ra ngoài
-  document.addEventListener("click", function (e) {
-    if (!nameInput.contains(e.target) && !suggestionBox.contains(e.target)) {
-      suggestionBox.innerHTML = "";
-    }
-  });
-
-  // Gợi ý Trung tâm theo Phòng
-  const departmentInput = document.getElementById("department");
-  const centerDatalist = document.getElementById("centers");
-
+  // Dữ liệu
+  const nameList = ["Nguyễn Văn A", "Nguyễn Văn B", "Trần Thị C", "Lê Văn D", "Phạm Thị E"];
+  const departmentList = ["Phòng Kỹ thuật", "Phòng Nhân sự", "Phòng Kế toán", "Phòng IT"];
   const centerMap = {
     "Phòng Kỹ thuật": ["Trung tâm Công nghệ", "Trung tâm Sản xuất"],
     "Phòng Nhân sự": ["Trung tâm Hành chính", "Trung tâm Đào tạo"],
@@ -252,32 +196,59 @@
     "Phòng IT": ["Trung tâm Hạ tầng", "Trung tâm Phần mềm"]
   };
 
-  departmentInput.addEventListener("input", function () {
-    const deptValue = this.value.trim();
-    const centers = centerMap[deptValue] || [];
+  // Hàm tạo gợi ý
+  function setupAutoSuggest(inputId, list, suggestionId, onSelectCallback) {
+    const input = document.getElementById(inputId);
+    const suggestionBox = document.getElementById(suggestionId);
 
-    // Xóa gợi ý cũ
-    centerDatalist.innerHTML = "";
+    input.addEventListener("input", function () {
+      const value = this.value.toLowerCase().trim();
+      suggestionBox.innerHTML = "";
+      if (!value) return;
 
-    // Tạo gợi ý mới
-    centers.forEach(center => {
-      const option = document.createElement("option");
-      option.value = center;
-      centerDatalist.appendChild(option);
+      const matches = list.filter(item => item.toLowerCase().includes(value));
+      matches.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        li.addEventListener("click", () => {
+          input.value = item;
+          suggestionBox.innerHTML = "";
+          if (onSelectCallback) onSelectCallback(item);
+        });
+        suggestionBox.appendChild(li);
+      });
     });
 
-    // Nếu chỉ có 1 trung tâm -> tự chọn
+    // Ẩn khi click ngoài
+    document.addEventListener("click", function (e) {
+      if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
+        suggestionBox.innerHTML = "";
+      }
+    });
+  }
+
+  // Khởi tạo 3 ô
+  setupAutoSuggest("fullname", nameList, "name-suggestions");
+  setupAutoSuggest("department", departmentList, "department-suggestions", updateCenterSuggestions);
+
+  function updateCenterSuggestions(deptName) {
+    const centers = centerMap[deptName] || [];
+    setupAutoSuggest("center", centers, "center-suggestions");
+    // Gợi ý mặc định nếu có 1 trung tâm
     if (centers.length === 1) {
       document.getElementById("center").value = centers[0];
+    } else {
+      document.getElementById("center").value = "";
+      document.getElementById("center-suggestions").innerHTML = "";
     }
-  });
+  }
 
-  // Xử lý gửi form
+  // Gửi form
   const formData = [];
 
   function submitForm() {
-    const name = nameInput.value.trim();
-    const dept = departmentInput.value.trim();
+    const name = document.getElementById("fullname").value.trim();
+    const dept = document.getElementById("department").value.trim();
     const center = document.getElementById("center").value.trim();
     const participate = document.getElementById("participate").checked;
 
@@ -291,31 +262,32 @@
       return;
     }
 
-    const data = { name, dept, center };
-    formData.push(data);
+    formData.push({ name, dept, center });
     updateList();
     clearForm();
   }
 
   function updateList() {
-    const tbody = document.querySelector("#list tbody");
+    const tbody = document.getElementById("list-body");
     tbody.innerHTML = "";
-    formData.forEach(item => {
+    formData.forEach(data => {
       const row = `<tr>
-        <td>${item.name}</td>
-        <td>${item.dept}</td>
-        <td>${item.center}</td>
+        <td>${data.name}</td>
+        <td>${data.dept}</td>
+        <td>${data.center}</td>
       </tr>`;
       tbody.innerHTML += row;
     });
   }
 
   function clearForm() {
-    nameInput.value = "";
-    departmentInput.value = "";
+    document.getElementById("fullname").value = "";
+    document.getElementById("department").value = "";
     document.getElementById("center").value = "";
     document.getElementById("participate").checked = false;
-    suggestionBox.innerHTML = "";
+    document.getElementById("name-suggestions").innerHTML = "";
+    document.getElementById("department-suggestions").innerHTML = "";
+    document.getElementById("center-suggestions").innerHTML = "";
   }
 </script>
 
