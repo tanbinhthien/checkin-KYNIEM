@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng ký tham gia</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f7f8;
+    }
+
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .checkbox-group {
+      margin-top: 1rem;
+    }
+
+    .checkbox-group input {
+      margin-right: 10px;
+    }
+
+    button {
+      margin-top: 2rem;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    #participants {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #ecf0f1;
+    }
+
+    @media (max-width: 600px) {
+      .container, #participants {
+        margin: 1rem;
+        padding: 1rem;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      td {
+        padding-left: 50%;
+        position: relative;
+      }
+
+      td::before {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 45%;
+        white-space: nowrap;
+        font-weight: bold;
+      }
+
+      td:nth-of-type(1)::before { content: "Họ và tên"; }
+      td:nth-of-type(2)::before { content: "Phòng"; }
+      td:nth-of-type(3)::before { content: "Trung tâm"; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Form Đăng ký Tham gia</h1>
+</header>
+
+<div class="container">
+  <label for="fullname">Họ và tên:</label>
+  <input list="names" id="fullname" name="fullname" placeholder="Nhập hoặc chọn tên">
+  <datalist id="names">
+    <option value="Nguyễn Văn A">
+    <option value="Trần Thị B">
+    <option value="Lê Văn C">
+  </datalist>
+
+  <label for="department">Phòng:</label>
+  <input list="departments" id="department" name="department" placeholder="Nhập tên phòng">
+  <datalist id="departments">
+    <option value="Phòng Kỹ thuật">
+    <option value="Phòng Nhân sự">
+    <option value="Phòng Kế toán">
+  </datalist>
+
+  <label for="center">Trung tâm:</label>
+  <input list="centers" id="center" name="center" placeholder="Gợi ý theo phòng">
+  <datalist id="centers">
+    <option value="Trung tâm Công nghệ">
+    <option value="Trung tâm Hành chính">
+  </datalist>
+
+  <div class="checkbox-group">
+    <label>
+      <input type="checkbox" id="participate"> Tham gia
+    </label>
+  </div>
+
+  <button onclick="submitForm()">Gửi</button>
+</div>
+
+<div id="participants">
+  <h2>Danh sách tham gia</h2>
+  <table id="list">
+    <thead>
+      <tr>
+        <th>Họ và tên</th>
+        <th>Phòng</th>
+        <th>Trung tâm</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Danh sách sẽ thêm ở đây -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const formData = [];
+
+  function submitForm() {
+    const name = document.getElementById("fullname").value.trim();
+    const dept = document.getElementById("department").value.trim();
+    const center = document.getElementById("center").value.trim();
+    const participate = document.getElementById("participate").checked;
+
+    if (!name || !dept || !center) {
+      alert("Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+
+    if (!participate) {
+      alert("Người này không tham gia.");
+      return;
+    }
+
+    const data = { name, dept, center };
+    formData.push(data);
+    updateList();
+    clearForm();
+  }
+
+  function updateList() {
+    const tbody = document.querySelector("#list tbody");
+    tbody.innerHTML = "";
+    formData.forEach((item, index) => {
+      const row = `<tr>
+        <td>${item.name}</td>
+        <td>${item.dept}</td>
+        <td>${item.center}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+  }
+
+  function clearForm() {
+    document.getElementById("fullname").value = "";
+    document.getElementById("department").value = "";
+    document.getElementById("center").value = "";
+    document.getElementById("participate").checked = false;
+  }
+</script>
+
+</body>
+</html>
