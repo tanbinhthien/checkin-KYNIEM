@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Đăng ký tham gia</title>
+  <title>Đăng ký tham gia lễ Kỷ niệm Trung Tâm</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -207,13 +207,14 @@
       td:nth-of-type(1)::before { content: "Họ và tên"; }
       td:nth-of-type(2)::before { content: "Phòng"; }
       td:nth-of-type(3)::before { content: "Trung tâm"; }
+      td:nth-of-type(4)::before { content: "Trạng thái"; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  Đăng ký tham gia
+  Đăng ký tham gia lễ Kỷ niệm Trung Tâm
 </header>
 
 <div class="container">
@@ -247,7 +248,12 @@
   <h2>Danh sách tham gia</h2>
   <table>
     <thead>
-      <tr><th>Họ và tên</th><th>Phòng</th><th>Trung tâm</th></tr>
+      <tr>
+        <th>Họ và tên</th>
+        <th>Phòng</th>
+        <th>Trung tâm</th>
+        <th>Trạng thái</th>
+      </tr>
     </thead>
     <tbody id="list-body"></tbody>
   </table>
@@ -357,11 +363,15 @@
       return;
     }
 
-    if (participate) {
-      formData.push({ name, dept, center });
-      updateList();
-    }
+    // Lưu dữ liệu vào formData kèm trạng thái tham gia hay không
+    formData.push({ 
+      name, 
+      dept, 
+      center, 
+      status: participate ? "Tham gia" : "Không tham gia"
+    });
 
+    updateList();
     clearForm();
   }
 
@@ -373,6 +383,7 @@
         <td>${data.name}</td>
         <td>${data.dept}</td>
         <td>${data.center}</td>
+        <td>${data.status}</td>
       </tr>`;
       tbody.innerHTML += row;
     });
