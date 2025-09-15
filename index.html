@@ -226,13 +226,13 @@
 
   <label for="department">Phòng:</label>
   <div class="input-wrapper">
-    <input type="text" id="department" placeholder="Nhập tên phòng" autocomplete="off" />
+    <input type="text" id="department" placeholder="Nhập tên phòng (không bắt buộc)" autocomplete="off" />
     <ul id="department-suggestions" class="suggestions-list"></ul>
   </div>
 
   <label for="center">Trung tâm:</label>
   <div class="input-wrapper">
-    <input type="text" id="center" placeholder="Trung tâm sẽ gợi ý theo phòng" autocomplete="off" />
+    <input type="text" id="center" placeholder="Trung tâm (không bắt buộc)" autocomplete="off" />
     <ul id="center-suggestions" class="suggestions-list"></ul>
   </div>
 
@@ -241,11 +241,21 @@
     <label><input type="checkbox" id="notParticipate" /> Không tham gia</label>
   </div>
 
-  <button onclick="submitForm()">Gửi</button>
+  <button onclick="submitForm()">Đăng ký</button>
 </div>
 
 <div id="participants">
   <h2>Danh sách tham gia</h2>
+  <div style="text-align: right; margin-bottom: 1rem;">
+    <button onclick="exportToExcel()" style="
+      background: linear-gradient(to right, #f39c12, #f1c40f);
+      color: white; border: none;
+      width: 70px; padding: 6px 0;
+      border-radius: 6px; cursor: pointer; font-weight: 600;
+      box-shadow: 0 2px 6px rgba(241,196,15,0.4);
+      font-size: 0.85rem; text-align: center;
+    ">Excel</button>
+  </div>
   <table>
     <thead>
       <tr>
@@ -259,21 +269,12 @@
   </table>
 </div>
 
+<!-- Thư viện SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
-  // Dữ liệu mẫu
-  const nameList = [
-    "Nguyễn Văn A",
-    "Nguyễn Văn B",
-    "Trần Thị C",
-    "Lê Văn D",
-    "Phạm Thị E"
-  ];
-  const departmentList = [
-    "Phòng Kỹ thuật",
-    "Phòng Nhân sự",
-    "Phòng Kế toán",
-    "Phòng IT"
-  ];
+  const nameList = ["Nguyễn Văn A","Nguyễn Văn B","Trần Thị C","Lê Văn D","Phạm Thị E"];
+  const departmentList = ["Phòng Kỹ thuật","Phòng Nhân sự","Phòng Kế toán","Phòng IT"];
   const centerMap = {
     "Phòng Kỹ thuật": ["Trung tâm Công nghệ", "Trung tâm Sản xuất"],
     "Phòng Nhân sự": ["Trung tâm Hành chính", "Trung tâm Đào tạo"],
@@ -281,7 +282,6 @@
     "Phòng IT": ["Trung tâm Hạ tầng", "Trung tâm Phần mềm"]
   };
 
-  // Hàm bỏ dấu tiếng Việt, chuẩn hóa để so sánh
   function removeVietnameseTones(str) {
     str = str.toLowerCase();
     str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
@@ -290,7 +290,6 @@
     return str;
   }
 
-  // Hàm tạo autocomplete cho input
   function setupAutoSuggest(inputId, list, suggestionId, onSelectCallback) {
     const input = document.getElementById(inputId);
     const suggestionBox = document.getElementById(suggestionId);
@@ -299,13 +298,9 @@
       const rawValue = this.value.trim();
       const value = removeVietnameseTones(rawValue);
       suggestionBox.innerHTML = "";
-
       if (!value) return;
 
-      const matches = list.filter(item => {
-        return removeVietnameseTones(item).includes(value);
-      });
-
+      const matches = list.filter(item => removeVietnameseTones(item).includes(value));
       matches.forEach(item => {
         const li = document.createElement("li");
         li.textContent = item;
@@ -318,7 +313,6 @@
       });
     });
 
-    // Ẩn suggestion khi click ra ngoài
     document.addEventListener("click", function (e) {
       if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
         suggestionBox.innerHTML = "";
@@ -335,7 +329,6 @@
     document.getElementById("center").value = centers.length === 1 ? centers[0] : "";
   }
 
-  // Checkbox logic chỉ chọn 1 trong 2
   document.getElementById("participate").addEventListener("change", function () {
     if (this.checked) document.getElementById("notParticipate").checked = false;
   });
@@ -343,7 +336,6 @@
     if (this.checked) document.getElementById("participate").checked = false;
   });
 
-  // Dữ liệu lưu danh sách người tham gia
   const formData = [];
 
   function submitForm() {
@@ -353,17 +345,15 @@
     const participate = document.getElementById("participate").checked;
     const notParticipate = document.getElementById("notParticipate").checked;
 
-    if (!name || !dept || !center) {
-      alert("Vui lòng nhập đầy đủ thông tin (Họ tên, Phòng, Trung tâm).");
+    if (!name) {
+      alert("Vui lòng nhập Họ và tên!");
       return;
     }
-
     if (!participate && !notParticipate) {
       alert("Vui lòng chọn Tham gia hoặc Không tham gia.");
       return;
     }
 
-    // Lưu dữ liệu vào formData kèm trạng thái tham gia hay không
     formData.push({ 
       name, 
       dept, 
@@ -381,8 +371,8 @@
     formData.forEach(data => {
       const row = `<tr>
         <td>${data.name}</td>
-        <td>${data.dept}</td>
-        <td>${data.center}</td>
+        <td>${data.dept || "-"}</td>
+        <td>${data.center || "-"}</td>
         <td>${data.status}</td>
       </tr>`;
       tbody.innerHTML += row;
@@ -398,6 +388,23 @@
     document.getElementById("name-suggestions").innerHTML = "";
     document.getElementById("department-suggestions").innerHTML = "";
     document.getElementById("center-suggestions").innerHTML = "";
+  }
+
+  function exportToExcel() {
+    if (formData.length === 0) {
+      alert("Danh sách đang trống, không có gì để xuất.");
+      return;
+    }
+
+    const worksheetData = [
+      ["Họ và tên", "Phòng", "Trung tâm", "Trạng thái"],
+      ...formData.map(item => [item.name, item.dept || "", item.center || "", item.status])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sách");
+    XLSX.writeFile(workbook, "danh_sach_tham_gia.xlsx");
   }
 </script>
 
