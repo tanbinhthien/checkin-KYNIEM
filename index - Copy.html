@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hệ thống điểm danh</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+    }
+
+    header {
+      background: linear-gradient(to right, #2c3e50, #4ca1af);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 1.2rem auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.2rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      margin-top: 0.8rem;
+      font-weight: 600;
+      color: #34495e;
+      line-height: 1.2;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 4px;
+      border-radius: 6px;
+      border: 1.3px solid #ccc;
+      font-size: 0.95rem;
+    }
+
+    .checkbox-group {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .checkbox-group label {
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="radio"],
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+
+    button {
+      margin-top: 1.2rem;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(to right, #27ae60, #2ecc71);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    #participants {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.8rem;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8faff;
+    }
+  </style>
+</head>
+<body>
+
+<header>Hệ thống điểm danh</header>
+
+<div class="container">
+  <label for="fullname">Họ và tên:</label>
+  <input type="text" id="fullname" placeholder="Nhập họ và tên" />
+
+  <label>Phòng:</label>
+  <div class="checkbox-group">
+    <label><input type="radio" name="department" value="Phòng KHTH" /> Phòng KHTH</label>
+    <label><input type="radio" name="department" value="Phòng SXKD" /> Phòng SXKD</label>
+    <label><input type="radio" name="department" value="Phòng TVGP" /> Phòng TVGP</label>
+  </div>
+
+  <label>Trung tâm:</label>
+  <div class="checkbox-group">
+    <label><input type="radio" name="center" value="TT KHDN" /> TT KHDN</label>
+    <label><input type="radio" name="center" value="TT GPDN" /> TT GPDN</label>
+    <label><input type="radio" name="center" value="TT SPBL" /> TT SPBL</label>
+    <label><input type="radio" name="center" value="TT DTTM" /> TT DTTM</label>
+  </div>
+
+  <div class="checkbox-group" style="flex-direction: row; gap: 1.2rem; margin-top: 1rem;">
+    <label><input type="checkbox" id="participate" /> Tham gia</label>
+    <label><input type="checkbox" id="notParticipate" /> Không tham gia</label>
+  </div>
+
+  <button onclick="submitForm()">Đăng ký</button>
+</div>
+
+<div id="participants">
+  <h2>Danh sách tham gia</h2>
+ <div style="display: flex; justify-content: flex-end; margin-bottom: 0.8rem;">
+  <button onclick="exportToExcel()" style="
+    background: linear-gradient(to right, #f39c12, #f1c40f);
+    color: white;
+    border: none;
+    padding: 6px 0;
+    width: 100px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+  ">Xuất Excel</button>
+</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Họ và tên</th>
+        <th>Phòng</th>
+        <th>Trung tâm</th>
+        <th>Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody id="list-body"></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  document.getElementById("participate").addEventListener("change", function () {
+    if (this.checked) document.getElementById("notParticipate").checked = false;
+  });
+  document.getElementById("notParticipate").addEventListener("change", function () {
+    if (this.checked) document.getElementById("participate").checked = false;
+  });
+
+  const formData = [];
+
+  function submitForm() {
+    const name = document.getElementById("fullname").value.trim();
+    const dept = document.querySelector('input[name="department"]:checked')?.value || "";
+    const center = document.querySelector('input[name="center"]:checked')?.value || "";
+    const participate = document.getElementById("participate").checked;
+    const notParticipate = document.getElementById("notParticipate").checked;
+
+    if (!name) {
+      alert("Vui lòng nhập Họ và tên!");
+      return;
+    }
+
+    if (!participate && !notParticipate) {
+      alert("Vui lòng chọn Tham gia hoặc Không tham gia.");
+      return;
+    }
+
+    formData.push({
+      name,
+      dept,
+      center,
+      status: participate ? "Tham gia" : "Không tham gia"
+    });
+
+    updateList();
+    clearForm();
+  }
+
+  function updateList() {
+    const tbody = document.getElementById("list-body");
+    tbody.innerHTML = "";
+    formData.forEach(data => {
+      const row = `<tr>
+        <td>${data.name}</td>
+        <td>${data.dept || "-"}</td>
+        <td>${data.center || "-"}</td>
+        <td>${data.status}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+  }
+
+  function clearForm() {
+    document.getElementById("fullname").value = "";
+    document.querySelectorAll('input[name="department"]').forEach(el => el.checked = false);
+    document.querySelectorAll('input[name="center"]').forEach(el => el.checked = false);
+    document.getElementById("participate").checked = false;
+    document.getElementById("notParticipate").checked = false;
+  }
+
+  function exportToExcel() {
+    if (formData.length === 0) {
+      alert("Danh sách trống.");
+      return;
+    }
+
+    const worksheetData = [
+      ["Họ và tên", "Phòng", "Trung tâm", "Trạng thái"],
+      ...formData.map(item => [item.name, item.dept, item.center, item.status])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sách");
+    XLSX.writeFile(workbook, "danh_sach_tham_gia.xlsx");
+  }
+</script>
+
+</body>
+</html>
